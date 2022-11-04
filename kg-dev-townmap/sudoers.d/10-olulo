@@ -1,0 +1,2 @@
+olulo ALL = (webapp) NOPASSWD:/usr/bin/php
+olulo ALL = (root) NOPASSWD:/usr/bin/systemctl

@@ -1,0 +1,20 @@
+name: Upload to S3
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: environment
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: upload to s3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          S3_OLULO_USER_SETUP_PATH: ${{ secrets.S3_OLULO_USER_SETUP_PATH }}
+        run: aws --debug s3 cp --recursive src "$S3_OLULO_USER_SETUP_PATH"
+

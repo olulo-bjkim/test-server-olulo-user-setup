@@ -20,37 +20,32 @@ commands:
     test: '[ -f /root/olulo-user-setup.sh ]'
     command: rm /root/olulo-user-setup.sh
   04-get-olulo-user-setup-script:
-    test: 'source /etc/environment && [ ! -z "$OLULO_USER_SETUP_GITHUB_URL" ]'
-    command: source /etc/environment && curl -s -u "olulo:$OLULO_USER_SETUP_GITHUB_TOKEN" "$OLULO_USER_SETUP_GITHUB_URL/olulo-user-setup.sh" > /root/olulo-user-setup.sh
+    test: 'source /etc/environment && [ ! -z "$S3_OLULO_USER_SETUP_PATH" ]'
+    command: source /etc/environment && aws s3 cp $S3_OLULO_USER_SETUP_PATH/olulo-user-setup.sh /root/olulo-user-setup.sh
   05-exec-set-olulo-script:
     test: '[ -f /root/olulo-user-setup.sh ]'
     command: chmod 700 /root/olulo-user-setup.sh && /root/olulo-user-setup.sh
 ```
 
 - users/olulo 아래에 아무것도 없으면 에러나서 불필요하지만 homeDir를 추가하였음.
-- 04-get-olulo-user-setup-script 에서 파일 없을 경우(또는 권한없을 경우) "404: Not Found"란 값이 파일에 저장되는데 05-exec-set-olulo-script 에서 실행시 오류나므로 별도로 체크하지 않고 그냥 둠
 
 ## git repository 파일 구조
 ```
-/olulo-user-setup.sh
-/eb환경이름/ssh/authorized_keys
-/eb환경이름/sudoers.d/10-olulo
+/src/olulo-user-setup.sh
+/src/eb환경이름/ssh/authorized_keys
+/src/eb환경이름/sudoers.d/10-olulo
 ```
 - `eb환경이름`은 각 eb환경의 이름(ex. kg-dev-env)
 - `eb환경이름`디렉토리 아래에 필요한 파일은 olulo-user-setup.sh 파일내용에서도 확인 가능
 
 ## 환경변수
 
-- `OLULO_USER_SETUP_GITHUB_URL`
-  - https://raw.githubusercontent.com/olulo-bjkim/test-server-olulo-user-setup/master
+- 이 repository의 Settings - Secrets - Actions에 다음 환경변수 추가(Settings - Environments를 설정가능하면 upload란 이름의 환경에 설정)
+  - AWS_ACCESS_KEY_ID
+  - AWS_SECRET_ACCESS_KEY
+  - S3_OLULO_USER_SETUP_PATH
 
-- `OLULO_USER_SETUP_GITHUB_TOKEN`
-  - 옵션 사항으로 리포지토리가 public 일 경우 불필요
-  - private 일 경우 이 리포지토리만 read 할 수 있는 토큰 생성해서 사용
-
-## 토큰
-- Fine-grained tokens (Beta) 로 발급할 경우 리포지토리를 지정할 수 있어서 좋은 데 expire만 최대 1년으로 주기적인 토큰 교체가 필요함
-- Tokens (classic)의 경우 expire 없이 토큰 발급할 순 있지만, 토큰 소유자의 모든 레포지토리에 접근할 수 있어서, 이 방식을 사용하려면, 전용계정을 만들어서 계정에 이 레포지토리만 권한을 줘서 토큰을 만들어야할 것임.
+- S3로의 upload는 .github action을 통해 upload (on:release?)
 
 ## SSH키
 

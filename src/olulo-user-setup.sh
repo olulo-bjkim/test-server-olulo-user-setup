@@ -8,8 +8,8 @@ fi
 
 source /etc/environment
 
-if [ -z "$OLULO_USER_SETUP_GITHUB_URL" ]; then
-    echo "OLULO_USER_SETUP_GITHUB_URL is not defined"
+if [ -z "$S3_OLULO_USER_SETUP_PATH" ]; then
+    echo "S3_OLULO_USER_SETUP_PATH is not defined"
     exit;
 fi
 
@@ -17,21 +17,12 @@ download() {
     SRC=$1
     DST=$2
 
-    USER=olulo
-    PASSWD=$OLULO_USER_SETUP_GITHUB_TOKEN
-    URL=$OLULO_USER_SETUP_GITHUB_URL/$EB_ENV_NAME/$SRC
-    HTTP_STATUS=$(curl -I -w "%{http_code}" -o /dev/null -s -u "$USER:$PASSWD" "$URL")
-    if [ $HTTP_STATUS == 200 ]; then
-        echo "- download $SRC to $DST"
-        curl -s -u "$USER:$PASSWD" "$URL" > "$DST"
-    else
-        echo "- http status for $SRC: $HTTP_STATUS"
-    fi
+    rm -f $DST
+    aws s3 cp $S3_OLULO_USER_SETUP_PATH/$SRC $DST
 }
 
 SUDOERS=10-olulo
 OLULO_SUDOERS=/etc/sudoers.d/$SUDOERS
-
 download "sudoers.d/$SUDOERS" "$OLULO_SUDOERS"
 if [ -f $OLULO_SUDOERS ]; then
     chmod 440 $OLULO_SUDOERS
